@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cuéntale a la Dra. Tania Torres cómo te sientes durante tu tratamiento.">
+<meta name="theme-color" content="#15263f">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cuéntame cómo estás</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: una columna, una cosa por pantalla, botones grandes para adultos mayores */
+:root {
+  --band: #15263f; --band-fg: #faf6f1; --bg: #faf6f1; --surface: #ffffff; --line: #ddd3c6;
+  --fg: #1f2838; --muted: #555d6a; --navy: #15263f; --rose: #a8615c; --gold: #9c7c45;
+  --ok: #2f6b4b; --ok-bg: #e3f1e8; --warn: #8a5a12; --warn-bg: #fbeed6; --bad: #9b2f28; --bad-bg: #fbe3e0; --soft: #f1eadf;
+  --display: 'Cormorant Garamond', Georgia, serif; --body: 'Nunito Sans', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --band: #0b1424; --bg: #0f1a2c; --surface: #18263d; --line: #33445f; --fg: #f1ece4; --muted: #b9bfca; --navy: #f1ece4;
+  --rose: #e7aaa4; --gold: #dcc296; --ok: #9fd8b6; --ok-bg: #1d3a2b; --warn: #f2cf8f; --warn-bg: #3d2f17; --bad: #ffb4ab; --bad-bg: #44201d; --soft: #1f2f49; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --band: #0b1424; --bg: #0f1a2c; --surface: #18263d; --line: #33445f; --fg: #f1ece4; --muted: #b9bfca; --navy: #f1ece4;
+  --rose: #e7aaa4; --gold: #dcc296; --ok: #9fd8b6; --ok-bg: #1d3a2b; --warn: #f2cf8f; --warn-bg: #3d2f17; --bad: #ffb4ab; --bad-bg: #44201d; --soft: #1f2f49; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 20px; line-height: 1.4; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--band); }
+.wrap { max-width: 540px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.band { background: var(--band); color: var(--band-fg); padding-block: 14px 16px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand img { width: 28px; }
+.brand .n { font-family: var(--display); font-size: 1.15rem; line-height: 1; }
+.appname { font-family: var(--display); font-style: italic; font-size: 1.7rem; line-height: 1.1; margin-top: 12px; color: #fff; }
+.appname span { color: #e2b3ae; font-style: normal; font-size: 1.3rem; }
+.brand .s { font-size: .62rem; letter-spacing: .24em; text-transform: uppercase; color: #e2b3ae; font-weight: 700; margin-top: 3px; }
+.demo { margin-top: 12px; font-size: .8rem; color: #eadfca; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.demo[hidden], .toast[hidden], textarea[hidden] { display: none !important; }
+.demo button { background: none; border: 1.5px solid #d9c095; color: #f3e6cd; border-radius: 99px; padding: 6px 14px; font: 700 .8rem var(--body); cursor: pointer; }
+main { padding-block: 20px 48px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 2.2rem; line-height: 1.08; margin: 0 0 6px; color: var(--navy); text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.7rem; line-height: 1.1; margin: 0 0 14px; color: var(--navy); text-wrap: balance; }
+.date { color: var(--muted); font-size: 1rem; margin-bottom: 20px; }
+.stack { display: grid; gap: 14px; }
+.big { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center; width: 100%; text-align: left; background: var(--surface); color: var(--fg);
+  border: 2px solid var(--line); border-radius: 20px; padding: 18px; cursor: pointer; font: 800 1.2rem/1.25 var(--body); min-height: 100px; }
+.big small { display: block; font-weight: 600; font-size: .9rem; color: var(--muted); margin-top: 4px; }
+.big .ic { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: var(--soft); }
+.big .ic svg { width: 36px; height: 36px; stroke: var(--navy); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.big.done { border-color: var(--ok); background: var(--ok-bg); }
+.big.done .ic { background: var(--ok); } .big.done .ic svg { stroke: #fff; }
+.big.wa .ic { background: #1f8f4e; } .big.wa .ic svg { stroke: #fff; }
+.small-links { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.small-links button { background: transparent; border: 2px solid var(--line); border-radius: 16px; padding: 14px 10px; font: 700 1rem var(--body); color: var(--navy); cursor: pointer; min-height: 60px; }
+.back { background: none; border: 0; color: var(--navy); font: 800 1.05rem var(--body); padding: 10px 0; margin-bottom: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; }
+.progress { color: var(--muted); font-size: .95rem; font-weight: 700; margin-bottom: 6px; }
+.bar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; margin-bottom: 22px; }
+.bar i { display: block; height: 100%; background: var(--gold); border-radius: 99px; }
+.q { font-family: var(--display); font-weight: 600; font-size: 2rem; line-height: 1.12; color: var(--navy); margin: 0 0 6px; text-wrap: balance; }
+.qhint { color: var(--muted); font-size: 1rem; margin: 0 0 20px; }
+.ans { display: grid; gap: 12px; }
+.ans button { display: flex; align-items: center; gap: 16px; width: 100%; border: 2.5px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 18px; padding: 16px 18px; font: 800 1.3rem var(--body); cursor: pointer; min-height: 76px; text-align: left; }
+.ans button small { display: block; font-weight: 600; font-size: 1rem; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+.ans .dot { width: 30px; height: 30px; border-radius: 50%; flex: none; }
+.ans button[aria-pressed="true"] { border-color: var(--navy); box-shadow: 0 0 0 3px var(--gold) inset; }
+.d0 { background: #3e8a5f; } .d1 { background: #c9a33a; } .d2 { background: #d9772b; } .d3 { background: #c0392b; } .dx { background: #9aa1ab; }
+.primary { width: 100%; border: 0; border-radius: 18px; padding: 18px; font: 800 1.25rem var(--body); cursor: pointer; background: var(--band); color: var(--band-fg); min-height: 68px; }
+:root[data-theme="dark"] .primary { background: var(--gold); color: #15263f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .primary { background: var(--gold); color: #15263f; } }
+.primary.wa { background: #1f8f4e; color: #fff; text-decoration: none; display: block; text-align: center; }
+.secondary { width: 100%; border: 2px solid var(--line); background: transparent; color: var(--navy); border-radius: 18px; padding: 14px; font: 700 1.05rem var(--body); cursor: pointer; min-height: 58px; }
+textarea, input { width: 100%; font: 400 1.1rem var(--body); color: var(--fg); background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 14px; }
+textarea { min-height: 130px; }
+label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; color: var(--navy); }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.card { background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+.alarm { background: var(--bad-bg); color: var(--bad); border: 3px solid var(--bad); border-radius: 20px; padding: 20px; }
+.alarm h2 { color: var(--bad); }
+.phone { font-size: 1.8rem; font-weight: 800; letter-spacing: .02em; color: var(--fg); background: var(--surface); border-radius: 14px; padding: 10px 14px; margin: 10px 0; user-select: all; }
+.ok { background: var(--ok-bg); color: var(--ok); border-radius: 20px; padding: 22px; text-align: center; }
+.ok .tick { font-size: 3rem; line-height: 1; }
+.med { display: grid; gap: 12px; background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+.med.done { border-color: var(--ok); background: var(--ok-bg); }
+.med .t { font-weight: 800; font-size: 1.25rem; color: var(--navy); }
+.med .d { color: var(--muted); font-size: 1rem; }
+.med button { border: 2.5px solid var(--ok); background: transparent; color: var(--ok); border-radius: 14px; padding: 12px; font: 800 1.1rem var(--body); cursor: pointer; min-height: 56px; }
+.med.done button { background: var(--ok); color: #fff; }
+:root[data-theme="dark"] .med.done button { color: #10251a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .med.done button { color: #10251a; } }
+.cita { display: grid; grid-template-columns: 76px 1fr; gap: 14px; align-items: start; background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 14px; }
+.cita .day { text-align: center; background: var(--soft); border-radius: 14px; padding: 8px 0; }
+.cita .day b { display: block; font-family: var(--display); font-size: 2rem; line-height: 1; color: var(--navy); }
+.cita .day span { font-size: .8rem; font-weight: 800; text-transform: uppercase; color: var(--muted); }
+.cita .t { font-weight: 800; color: var(--navy); }
+.cita .d { color: var(--muted); font-size: 1rem; }
+.big.alarmbtn .ic { background: var(--bad-bg); } .big.alarmbtn .ic svg { stroke: var(--bad); }
+.al { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 1.1rem; }
+.al .dot { width: 20px; height: 20px; border-radius: 50%; margin-top: 5px; }
+.al b { color: var(--navy); }
+.preview { white-space: pre-wrap; font-size: .95rem; background: var(--surface); border: 2px dashed var(--line); border-radius: 14px; padding: 14px; max-height: 280px; overflow: auto; }
+.setup h3 { font-family: var(--display); font-size: 1.4rem; color: var(--navy); margin: 26px 0 10px; }
+.row { display: flex; gap: 10px; align-items: center; }
+.row > .grow { flex: 1; min-width: 0; }
+.x { border: 2px solid var(--line); background: transparent; color: var(--muted); border-radius: 12px; font: 800 .95rem var(--body); padding: 8px 12px; cursor: pointer; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--band); color: var(--band-fg); padding: 14px 22px; border-radius: 99px; font-weight: 800; z-index: 30; }
+.foot { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 30px; }
+.helper { color: var(--muted); font-size: .95rem; }
+</style>
+</head>
+<body>
+
+<header class="band"><div class="wrap">
+  <div class="brand"><img src="data:image/png;base64,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" alt=""><div><div class="n">Dra. Tania Torres</div><div class="s">Oncología médica</div></div></div>
+  <div class="appname">Cuéntame cómo estás <span>♡</span></div>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  const KEY = 'carpeta-dra-tania-sencilla-v3';
+  // Opciones basadas en CTCAE v5.0: posición 0 = sin síntoma, 1 = grado 1, 2 = grado 2, 3 = grado 3 o más
+  const Q = [
+    { k: 'Cansancio', q: '¿Cómo está tu cansancio?', o: [
+      ['Normal', 'Tengo mi energía de siempre'],
+      ['Un poco cansado', 'Se me quita al descansar'],
+      ['Cansado', 'No se quita al descansar y me cuesta hacer quehaceres, cocinar o salir'],
+      ['Muy cansado', 'Necesito ayuda para bañarme, vestirme o comer']] },
+    { k: 'Náusea', q: '¿Tienes náusea (ganas de vomitar)?', o: [
+      ['No', 'Sin náusea'],
+      ['Un poco', 'Pero sigo comiendo como siempre'],
+      ['Sí, como menos', 'Por la náusea como y tomo menos de lo normal'],
+      ['Casi no puedo comer ni tomar', 'La náusea no me deja comer ni tomar líquidos']] },
+    { k: 'Vómito', q: '¿Has vomitado hoy?', o: [
+      ['No', 'No vomité'],
+      ['1 o 2 veces', 'Y sí puedo tomar líquidos'],
+      ['3 a 5 veces', 'Me cuesta trabajo tomar líquidos'],
+      ['6 veces o más', 'O vomito todo lo que tomo']] },
+    { k: 'Diarrea', q: '¿Tienes diarrea?', o: [
+      ['No', 'Voy al baño como siempre'],
+      ['Poca', 'Hasta 3 veces más de lo normal en el día'],
+      ['Moderada', 'De 4 a 6 veces más de lo normal en el día'],
+      ['Mucha', '7 veces o más, o no alcanzo a llegar al baño']] },
+    { k: 'Estreñimiento', q: '¿Tienes estreñimiento?', o: [
+      ['No', 'Voy al baño como siempre'],
+      ['A veces', 'De vez en cuando me cuesta ir, o a veces uso laxante o fibra'],
+      ['Seguido', 'Casi siempre me cuesta y uso laxantes o lavados seguido'],
+      ['Muy fuerte', 'No puedo evacuar aunque use laxantes, o necesito que me ayuden']] },
+    { k: 'Dolor', q: '¿Tienes dolor?', o: [
+      ['No', 'Sin dolor'],
+      ['Leve', 'Me molesta, pero hago mis cosas normalmente'],
+      ['Moderado', 'Me cuesta hacer quehaceres, cocinar o salir'],
+      ['Fuerte', 'No puedo bañarme, vestirme o comer sin ayuda']] },
+    { k: 'Boca', q: '¿Cómo está tu boca?', o: [
+      ['Bien', 'Sin llagas ni dolor'],
+      ['Algo sensible', 'Molestia leve, como normal'],
+      ['Llagas o dolor', 'Tengo que comer cosas blandas o frías'],
+      ['Mucho dolor', 'No puedo comer ni beber por el dolor']] },
+    { k: 'Apetito', q: '¿Cómo está tu apetito?', o: [
+      ['Normal', 'Tengo hambre y como lo de siempre'],
+      ['Menos hambre', 'Pero sigo comiendo como siempre'],
+      ['Como menos', 'Como menos de lo normal, aunque no he bajado mucho de peso'],
+      ['Casi no como', 'He bajado de peso o casi no pruebo bocado']] }
+  ];
+  const FIEBRE = [['No', 'no', 'd0', 'Menos de 38 °C'], ['Sí, de 38 a 39 °C', 'g1', 'd3', ''], ['Sí, más de 39 °C', 'g2', 'd3', ''], ['No me la medí', 'nose', 'dx', 'No tengo termómetro o no me la tomé']];
+  const DOTS = ['d0', 'd1', 'd2', 'd3'];
+  const DOCTORA_TEL = '5578690717';
+  const TEL_VISTO = '55 7869 0717'; // WhatsApp de la Dra. Tania Torres, 10 dígitos
+  const ALARMS = ['<b>Fiebre de 38 °C o más</b>, o escalofríos, aunque te sientas bien.', '<b>Vómito que no se quita</b> y no te deja tomar líquidos.', '<b>Diarrea muy fuerte</b> o muchas veces al día.', '<b>Falta de aire</b> o dificultad para respirar.', '<b>Dolor fuerte</b> que no mejora con los medicamentos.', '<b>Sangrado o moretones</b> que no son normales en ti.', '<b>Debilidad muy fuerte</b>, mareo o sensación de desmayo.', '<b>Dolor, enrojecimiento o hinchazón</b> en el brazo de la aplicación o en el puerto.', '<b>Llagas en la boca</b> que no te dejan comer ni beber.'];
+  const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const MES3 = MES.map(m => m.slice(0, 3));
+  const DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const today = () => iso(new Date());
+  const addDays = (s, n) => { const d = new Date(s + 'T12:00'); d.setDate(d.getDate() + n); return iso(d); };
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const longDate = s => { const d = new Date(s + 'T12:00'); return DIA[d.getDay()] + ' ' + d.getDate() + ' de ' + MES[d.getMonth()]; };
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  const blank = () => ({ demo: false, log: {}, datos: {} });
+  let S; try { S = JSON.parse(localStorage.getItem(KEY)) || blank(); } catch (e) { S = blank(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const nid = a => a.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+
+  const app = document.getElementById('app');
+  let view = 'inicio', step = 0, draft = null;
+  function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2200); }
+  const icon = p => `<svg viewBox="0 0 24 24">${p}</svg>`;
+  const I = {
+    heart: icon('<path d="M12 20s-7-4.3-7-9.7A4 4 0 0 1 12 8a4 4 0 0 1 7 2.3C19 15.7 12 20 12 20z"/>'),
+    pill: icon('<rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M9.5 8.5l5 7"/>'),
+    send: icon('<path d="M4 12l16-8-6 16-3-6z"/><path d="M11 14l9-10"/>'),
+    alert: icon('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.5v.01"/>'),
+    check: icon('<path d="M5 12.5l4.5 4.5L19 7.5"/>')
+  };
+  const isFever = f => f === 'g1' || f === 'g2' || f === 'si';
+  const alarmOf = e => e && (isFever(e.fiebre) || ['Náusea', 'Vómito', 'Diarrea', 'Estreñimiento', 'Dolor', 'Boca'].some(k => (e.s || {})[k] === 3));
+
+  function summary() {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(today(), -6 + i));
+    const L = ['Hola doctora, soy ' + (S.datos.nombre || 'su paciente') + '.'];
+    const uq = S.datos.ultimaQuimio;
+    if (uq) { const n = Math.round((new Date(today() + 'T12:00') - new Date(uq + 'T12:00')) / 864e5); L.push('Última quimioterapia: ' + longDate(uq) + (n >= 0 ? ' (hace ' + n + (n === 1 ? ' día)' : ' días)') : '')); }
+    L.push('Así me he sentido:', '');
+    days.forEach(d => { const e = S.log[d]; if (!e) return;
+      const parts = Q.filter(x => (e.s[x.k] ?? 0) > 0).map(x => x.k + ': ' + x.o[e.s[x.k]][0].toLowerCase() + ' (G' + e.s[x.k] + ')');
+      if (e.fiebre === 'g1') parts.unshift('FIEBRE 38 a 39 °C'); else if (e.fiebre === 'g2') parts.unshift('FIEBRE más de 39 °C'); else if (e.fiebre === 'si') parts.unshift('FIEBRE 38 °C o más');
+      L.push('• ' + cap(longDate(d)) + ': ' + (parts.join(', ') || 'bien') + (e.nota ? '. ' + e.nota : '')); });
+    if (!days.some(d => S.log[d])) L.push('Todavía no he anotado nada esta semana.');
+    return L.join('\n');
+  }
+  function waLink() { let t = DOCTORA_TEL.replace(/\D/g, ''); if (t.length === 10) t = '52' + t; return 'https://wa.me/' + t + '?text=' + encodeURIComponent(summary()); }
+  const back = (to = 'inicio') => `<button class="back" type="button" data-go="${to}">‹ Regresar</button>`;
+
+  const V = {
+    inicio() {
+      const t = today(), done = !!S.log[t];
+      return `<h1>Hola${S.datos.nombre ? ', ' + esc(S.datos.nombre) : ''}</h1><div class="date">Hoy es ${longDate(t)}</div>
+      <div class="stack">
+        <button class="big ${done ? 'done' : ''}" data-go="sentir" type="button"><span class="ic">${done ? I.check : I.heart}</span><span>${done ? 'Ya anotaste cómo te sientes hoy' : '¿Cómo me siento hoy?'}<small>${done ? 'Toca aquí si quieres cambiarlo' : 'Unas preguntas sencillas'}</small></span></button>
+        <button class="big alarmbtn" data-go="alarma" type="button"><span class="ic">${I.alert}</span><span>Señales de alarma<small>Cuándo avisarle a tu doctora</small></span></button>
+        <button class="big wa" data-go="enviar" type="button"><span class="ic">${I.send}</span><span>Mandar a mi doctora<small>Por WhatsApp</small></span></button>
+      </div>`;
+    },
+    sentir() {
+      const total = Q.length + 3;
+      const head = `${back()}<div class="progress">Pregunta ${step + 1} de ${total}</div><div class="bar"><i style="width:${((step + 1) / total) * 100}%"></i></div>`;
+      if (step < Q.length) {
+        const x = Q[step], cur = draft.s[x.k];
+        return head + `<p class="q">${x.q}</p><p class="qhint">Toca una respuesta.</p>
+          <div class="ans">${x.o.map((a, v) => `<button type="button" data-ans="${v}" aria-pressed="${cur === v}"><span class="dot ${DOTS[v]}"></span><span>${a[0]}<small>${a[1]}</small></span></button>`).join('')}</div>`;
+      }
+      if (step === Q.length) {
+        return head + `<p class="q">¿Tuviste fiebre?</p><p class="qhint">Fiebre es 38 °C o más en el termómetro.</p>
+          <div class="ans">${FIEBRE.map(a => `<button type="button" data-fiebre="${a[1]}" aria-pressed="${draft.fiebre === a[1]}"><span class="dot ${a[2]}"></span><span>${a[0]}${a[3] ? `<small>${a[3]}</small>` : ''}</span></button>`).join('')}</div>`;
+      }
+      if (step === Q.length + 2) {
+        return head + `<p class="q">Para terminar</p><p class="qhint">Revisa que estos datos estén bien.</p>
+          <label class="l" for="nom">Tu nombre</label><input id="nom" autocomplete="name" value="${esc(S.datos.nombre)}">
+          <div style="height:16px"></div>
+          <label class="l" for="quimio">Fecha de tu última quimioterapia</label><p class="helper" style="margin:-2px 0 8px">El día de tu última aplicación, o de tu última toma si son pastillas.</p>
+          <input id="quimio" type="date" max="${today()}" value="${esc(S.datos.ultimaQuimio)}">
+          <div style="height:20px"></div><button class="primary" type="button" id="saveName">Terminar</button>`;
+      }
+      return head + `<p class="q">¿Algo más que quieras contarle a la doctora?</p><p class="qhint">Puedes dejarlo en blanco.</p>
+        <label class="l" for="nota">Escribe aquí</label><textarea id="nota">${esc(draft.nota)}</textarea>
+        <div style="height:16px"></div><button class="primary" type="button" id="finish">Siguiente</button>`;
+    },
+    listo() {
+      const e = S.log[today()];
+      if (alarmOf(e)) {
+        const tel = DOCTORA_TEL;
+        return `<div class="alarm"><h2>Avísale a tu doctora ahora</h2><p style="margin:0">Lo que anotaste puede ser una señal de alarma.</p>
+          ${tel ? `<div class="phone">${TEL_VISTO}</div>` : ''}
+          <a class="primary wa" style="margin-top:12px" target="_blank" rel="noopener" href="${waLink()}">Mandarle mensaje por WhatsApp</a>
+          <p style="margin:14px 0 0;font-size:1rem">Si no logras comunicarte y te sientes muy mal, ve a urgencias y di que estás en tratamiento contra el cáncer.</p></div>
+          <div style="height:14px"></div><button class="secondary" data-go="inicio" type="button">Ir al inicio</button>`;
+      }
+      return `<div class="ok"><div class="tick">✓</div><h2 style="color:var(--ok);margin:8px 0 4px">Listo, quedó anotado</h2><p style="margin:0">Gracias. Mañana vuelve a contarnos cómo te sientes.</p></div>
+        <div style="height:14px"></div><button class="primary" data-go="inicio" type="button">Ir al inicio</button>`;
+    },
+    enviar() {
+      return back() + `<h2>Mandar a mi doctora</h2><p class="helper" style="margin-top:-6px">Este es el mensaje. Toca el botón verde y luego "Enviar" en WhatsApp.</p>
+        <div class="preview">${esc(summary())}</div><div style="height:14px"></div>
+        <a class="primary wa" target="_blank" rel="noopener" href="${waLink()}">Abrir WhatsApp</a>
+        ${DOCTORA_TEL ? '' : '<p class="helper">En WhatsApp elige el chat de tu doctora.</p>'}
+        <div style="height:10px"></div><button class="secondary" type="button" id="copyRes">Copiar el mensaje</button>
+        <textarea id="resOut" hidden readonly style="margin-top:10px"></textarea>`;
+    },
+    alarma() {
+      return back() + `<h2>Señales de alarma</h2><p class="helper" style="margin-top:-6px">Avísale a tu doctora de inmediato si tienes alguna de estas:</p>
+        <div class="stack">${ALARMS.map(a => `<div class="al"><span class="dot d3"></span><span>${a}</span></div>`).join('')}</div>
+        <div class="card" style="margin-top:16px"><b>Ten un termómetro en casa.</b> Si tienes fiebre, avísale antes de tomar algo para bajarla.</div>
+        <div class="card" style="margin-top:12px"><b>Si no logras comunicarte</b> y te sientes muy mal, ve a urgencias y di que estás en tratamiento contra el cáncer.</div>
+        <div class="card" style="margin-top:12px"><b>WhatsApp de tu doctora</b><div class="phone" style="margin-bottom:0">${TEL_VISTO}</div></div>
+        <div style="height:16px"></div><a class="primary wa" target="_blank" rel="noopener" href="${waLink()}">Mandarle mensaje por WhatsApp</a>`;
+    }
+  };
+
+  function render() {
+    app.innerHTML = V[view]() + '<p class="foot">Dra. Tania Torres · Oncología médica</p>';
+  }
+  function go(v) {
+    if (v === 'sentir') { const e = S.log[today()]; draft = e ? JSON.parse(JSON.stringify(e)) : { s: {}, fiebre: null, nota: '' }; step = 0; }
+    view = v; render(); window.scrollTo(0, 0);
+  }
+  function copy(txt, outId, okMsg) {
+    const out = document.getElementById(outId); const fb = () => { out.hidden = false; out.value = txt; out.select(); toast('Selecciona y copia el texto'); };
+    try { navigator.clipboard.writeText(txt).then(() => toast(okMsg), fb); } catch (x) { fb(); }
+  }
+
+  app.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
+    if (d.go) return go(d.go);
+    if (d.ans != null) { draft.s[Q[step].k] = +d.ans; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
+    if (d.fiebre) { draft.fiebre = d.fiebre; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
+    if (b.id === 'finish') { draft.nota = document.getElementById('nota').value.trim(); S.log[today()] = draft; save(); step++; render(); window.scrollTo(0, 0); return; }
+    if (b.id === 'saveName') { S.datos.nombre = document.getElementById('nom').value.trim(); S.datos.ultimaQuimio = document.getElementById('quimio').value; save(); return go('listo'); }
+    if (b.id === 'copyRes') return copy(summary(), 'resOut', 'Mensaje copiado');
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>
