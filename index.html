@@ -180,6 +180,13 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
   const blank = () => ({ demo: false, log: {}, datos: {} });
   let S; try { S = JSON.parse(localStorage.getItem(KEY)) || blank(); } catch (e) { S = blank(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  // El enlace que manda la doctora puede traer ?nombre=...&quimio=AAAA-MM-DD
+  try {
+    const u = new URLSearchParams(location.search), n = (u.get('nombre') || '').trim(), q = u.get('quimio') || '';
+    if (n) S.datos.nombre = n.slice(0, 60);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(q)) S.datos.ultimaQuimio = q;
+    if (n || q) { save(); history.replaceState(null, '', location.pathname); }
+  } catch (e) {}
   const nid = a => a.reduce((m, x) => Math.max(m, x.id), 0) + 1;
 
   const app = document.getElementById('app');
