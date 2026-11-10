@@ -44,9 +44,40 @@ function fechaISO_(v) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v) : '';
 }
 
+// Hoja con datos que pone la doctora por paciente (por ahora, el tratamiento).
+const HOJA_PAC = 'Pacientes';
+function hojaPac_() {
+  const ss = SpreadsheetApp.getActive();
+  let h = ss.getSheetByName(HOJA_PAC);
+  if (!h) {
+    h = ss.insertSheet(HOJA_PAC);
+    h.appendRow(['Paciente', 'Nombre', 'Tratamiento', 'Actualizado']);
+    h.setFrozenRows(1);
+    h.getRange(1, 1, 1, 4).setFontWeight('bold');
+    h.getRange('A:A').setNumberFormat('@');
+  }
+  return h;
+}
+function guardarTratamiento_(d) {
+  if (d.clave !== CLAVE || CLAVE === 'cambia-esta-clave') return salida_({ ok: false, error: 'clave' });
+  const id = texto_(d.id, 80);
+  if (!id) return salida_({ ok: false });
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const h = hojaPac_();
+    const ids = h.getRange(1, 1, h.getLastRow(), 1).getValues().map(r => String(r[0]));
+    const fila = [id, texto_(d.nombre, 80), texto_(d.tratamiento, 300), new Date()];
+    const i = ids.indexOf(id);
+    if (i > 0) h.getRange(i + 1, 1, 1, 4).setValues([fila]); else h.appendRow(fila);
+  } finally { lock.releaseLock(); }
+  return salida_({ ok: true });
+}
+
 function doPost(e) {
   let d;
   try { d = JSON.parse(e.postData.contents); } catch (err) { return salida_({ ok: false }); }
+  if (d.tipo === 'tratamiento') return guardarTratamiento_(d);
   const s = d.s || {};
   const fila = [
     new Date(),
@@ -76,7 +107,9 @@ function doGet(e) {
     if (v instanceof Date) return Utilities.formatDate(v, tz, i === 0 ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
     return v;
   }));
-  return salida_({ ok: true, cols: valores[0], filas: filas });
+  const tratamientos = {};
+  hojaPac_().getDataRange().getValues().slice(1).forEach(r => { if (r[0]) tratamientos[String(r[0])] = String(r[2] || ''); });
+  return salida_({ ok: true, cols: valores[0], filas: filas, tratamientos: tratamientos });
 }
 
 function salida_(obj) {

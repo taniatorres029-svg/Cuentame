@@ -48,6 +48,12 @@ main { padding-block: 18px 40px; }
 .dh .grow { flex: 1; min-width: 200px; }
 .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 10px 0 4px; color: var(--muted); font-size: .9rem; }
 .facts b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.tx-form { margin: 12px 0 0; }
+.tx-form label { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
+.tx-row { display: flex; gap: 8px; }
+.tx-row input { flex: 1; min-width: 0; font: 400 .95rem var(--body); padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+#txmsg { font-size: .8rem; }
+.pt .m.tx { color: var(--rose); font-weight: 700; }
 .alert { background: var(--bad-bg); color: var(--bad); border-radius: 12px; padding: 10px 14px; margin: 12px 0 0; font-weight: 700; }
 h3 { font: 600 1.25rem var(--display); color: var(--navy); margin: 22px 0 8px; }
 .chartbox { position: relative; height: 320px; }
@@ -99,7 +105,7 @@ tr.al td { background: #fdf3f2; }
   const fmtTel = c => c && c.length === 10 ? c.slice(0, 2) + ' ' + c.slice(2, 6) + ' ' + c.slice(6) : (c || '');
 
   let clave = ''; try { clave = localStorage.getItem(KEYSTORE) || ''; } catch (e) {}
-  let pacientes = [], sel = null, chart = null, ocultos = new Set();
+  let pacientes = [], sel = null, chart = null, ocultos = new Set(), tratamientos = {};
 
   function login(msg) {
     document.getElementById('refresh').hidden = true; document.getElementById('logout').hidden = true;
@@ -117,6 +123,7 @@ tr.al td { background: #fdf3f2; }
     catch (e) { app.innerHTML = '<div class="card empty"><p class="err">No pude leer tu hoja de Google.</p><p>Revisa tu internet y toca "Actualizar".</p></div>'; document.getElementById('refresh').hidden = false; return; }
     if (!data.ok) { try { localStorage.removeItem(KEYSTORE); } catch (e) {} clave = ''; return login('La clave no es correcta.'); }
     document.getElementById('refresh').hidden = false; document.getElementById('logout').hidden = false;
+    tratamientos = data.tratamientos || {};
     agrupar(data.cols, data.filas); render();
   }
 
@@ -155,7 +162,7 @@ tr.al td { background: #fdf3f2; }
     const q = (document.getElementById('q').value || '').toLowerCase();
     document.getElementById('pts').innerHTML = pacientes.filter(p => !q || p.nombre.toLowerCase().includes(q) || p.cel.includes(q)).map(p =>
       `<button class="pt" type="button" data-id="${esc(p.id)}" aria-current="${p.id === sel}"><span class="n">${esc(p.nombre || 'Sin nombre')}</span>${chipDe(p)}
-        <span class="m">Última respuesta ${fmt(p.ult.fecha)}${p.ult.dia !== '' && p.ult.dia != null ? ' · día ' + p.ult.dia + ' post-quimio' : ''}</span></button>`).join('') || '<p class="muted" style="padding:10px">Sin resultados.</p>';
+        ${tratamientos[p.id] ? `<span class="m tx">${esc(tratamientos[p.id])}</span>` : ''}<span class="m">Última respuesta ${fmt(p.ult.fecha)}${p.ult.dia !== '' && p.ult.dia != null ? ' · día ' + p.ult.dia + ' post-quimio' : ''}</span></button>`).join('') || '<p class="muted" style="padding:10px">Sin resultados.</p>';
   }
   function pintaDetalle() {
     const p = pacientes.find(x => x.id === sel); if (!p) return;
@@ -165,6 +172,9 @@ tr.al td { background: #fdf3f2; }
       <div class="dh"><div class="grow"><h2>${esc(p.nombre || 'Sin nombre')}</h2>
         <div class="facts"><span>Celular <b>${esc(fmtTel(p.cel)) || '–'}</b></span><span>Última quimio <b>${fmt(u.quimio)}</b></span><span>Respuestas <b>${p.lista.length}</b></span><span>Última <b>${fmt(u.fecha)}</b></span></div></div>
         ${wa ? `<a class="btn wa" target="_blank" rel="noopener" href="${wa}">Escribirle por WhatsApp</a>` : ''}</div>
+      <form class="tx-form" id="txf"><label for="tx">Tratamiento</label>
+        <div class="tx-row"><input id="tx" maxlength="300" placeholder="Ej. FOLFOX ciclo 4, cada 14 días" value="${esc(tratamientos[p.id] || '')}"><button type="submit">Guardar</button></div>
+        <span class="muted" id="txmsg"></span></form>
       ${u.alarma ? `<div class="alert">Señal de alarma el ${fmt(u.fecha)}: ${esc([u.fiebre && u.fiebre !== 'No' && u.fiebre !== 'No medida' ? 'fiebre ' + u.fiebre : ''].concat(grados).filter(Boolean).join(', '))}</div>` : ''}
       <h3>Evolución de síntomas</h3>
       <div class="toggles" id="tg">${SINT.map((k, i) => `<button type="button" data-s="${k}" aria-pressed="${!ocultos.has(k)}"><i style="background:${COLORS[i]}"></i>${k}</button>`).join('')}</div>
@@ -192,6 +202,14 @@ tr.al td { background: #fdf3f2; }
     });
   }
 
+  app.addEventListener('submit', e => {
+    if (e.target.id !== 'txf') return; e.preventDefault();
+    const p = pacientes.find(x => x.id === sel); if (!p) return;
+    const t = document.getElementById('tx').value.trim(), msg = document.getElementById('txmsg');
+    msg.textContent = 'Guardando…';
+    fetch(BASE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ tipo: 'tratamiento', clave, id: p.id, nombre: p.nombre, tratamiento: t }) })
+      .then(() => { tratamientos[p.id] = t; msg.textContent = 'Guardado'; pintaLista(); }, () => { msg.textContent = 'No se pudo guardar. Revisa tu internet.'; });
+  });
   app.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.id) { sel = b.dataset.id; pintaLista(); pintaDetalle(); if (window.innerWidth <= 820) document.getElementById('det').scrollIntoView({ behavior: 'smooth' }); }
