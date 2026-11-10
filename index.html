@@ -97,6 +97,14 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
 .al { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 1.1rem; }
 .al .dot { width: 20px; height: 20px; border-radius: 50%; margin-top: 5px; }
 .al b { color: var(--navy); }
+.wa-box { margin-top: 14px; background: var(--surface); border: 2.5px solid #1f8f4e; border-radius: 20px; padding: 18px; }
+.wa-box h2 { margin-bottom: 10px; }
+.pasos { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.pasos li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; font-size: 1.1rem; font-weight: 700; }
+.pasos li b { width: 40px; height: 40px; border-radius: 50%; background: #1f8f4e; color: #fff; display: grid; place-items: center; font-size: 1.2rem; }
+.flecha { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #1f8f4e; color: #fff; font-size: .85rem; vertical-align: middle; }
+.saved { margin: 12px 0 0; padding: 12px 16px; border-radius: 14px; background: var(--ok-bg); color: var(--ok); font-weight: 700; font-size: 1rem; }
+.saved.bad { background: var(--warn-bg); color: var(--warn); }
 .preview { white-space: pre-wrap; font-size: .95rem; background: var(--surface); border: 2px dashed var(--line); border-radius: 14px; padding: 14px; max-height: 280px; overflow: auto; }
 .setup h3 { font-family: var(--display); font-size: 1.4rem; color: var(--navy); margin: 26px 0 10px; }
 .row { display: flex; gap: 10px; align-items: center; }
@@ -164,6 +172,8 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
   ];
   const FIEBRE = [['No', 'no', 'd0', 'Menos de 38 °C'], ['Sí, de 38 a 39 °C', 'g1', 'd3', ''], ['Sí, más de 39 °C', 'g2', 'd3', ''], ['No me la medí', 'nose', 'dx', 'No tengo termómetro o no me la tomé']];
   const DOTS = ['d0', 'd1', 'd2', 'd3'];
+  // Dirección de la base privada (Apps Script de Google). Vacía = solo WhatsApp.
+  const BASE_URL = '';
   const DOCTORA_TEL = '5578690717';
   const TEL_VISTO = '55 7869 0717'; // WhatsApp de la Dra. Tania Torres, 10 dígitos
   const ALARMS = ['<b>Fiebre de 38 °C o más</b>, o escalofríos, aunque te sientas bien.', '<b>Vómito que no se quita</b> y no te deja tomar líquidos.', '<b>Diarrea muy fuerte</b> o muchas veces al día.', '<b>Falta de aire</b> o dificultad para respirar.', '<b>Dolor fuerte</b> que no mejora con los medicamentos.', '<b>Sangrado o moretones</b> que no son normales en ti.', '<b>Debilidad muy fuerte</b>, mareo o sensación de desmayo.', '<b>Dolor, enrojecimiento o hinchazón</b> en el brazo de la aplicación o en el puerto.', '<b>Llagas en la boca</b> que no te dejan comer ni beber.'];
@@ -182,10 +192,11 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
   // El enlace que manda la doctora puede traer ?nombre=...&quimio=AAAA-MM-DD
   try {
-    const u = new URLSearchParams(location.search), n = (u.get('nombre') || '').trim(), q = u.get('quimio') || '';
+    const u = new URLSearchParams(location.search), n = (u.get('nombre') || '').trim(), q = u.get('quimio') || '', c = (u.get('cel') || '').replace(/\D/g, '');
     if (n) S.datos.nombre = n.slice(0, 60);
     if (/^\d{4}-\d{2}-\d{2}$/.test(q)) S.datos.ultimaQuimio = q;
-    if (n || q) { save(); history.replaceState(null, '', location.pathname); }
+    if (c.length >= 10) S.datos.celular = c.slice(-10);
+    if (n || q || c) { save(); history.replaceState(null, '', location.pathname); }
   } catch (e) {}
   const nid = a => a.reduce((m, x) => Math.max(m, x.id), 0) + 1;
 
@@ -219,6 +230,28 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
   function waLink() { let t = DOCTORA_TEL.replace(/\D/g, ''); if (t.length === 10) t = '52' + t; return 'https://wa.me/' + t + '?text=' + encodeURIComponent(summary()); }
   const back = (to = 'inicio') => `<button class="back" type="button" data-go="${to}">‹ Regresar</button>`;
 
+  const FIEBRE_TXT = { no: 'No', g1: '38 a 39 °C', g2: 'Más de 39 °C', nose: 'No medida', si: '38 °C o más' };
+  function diaPost(fecha) { const uq = S.datos.ultimaQuimio; if (!uq) return ''; const n = Math.round((new Date(fecha + 'T12:00') - new Date(uq + 'T12:00')) / 864e5); return n >= 0 ? n : ''; }
+  function guardarEnBase(fecha) {
+    const e = S.log[fecha]; if (!BASE_URL || !e) return;
+    e.guardado = 'enviando'; save();
+    const body = JSON.stringify({ fecha, nombre: S.datos.nombre || '', celular: S.datos.celular || '', ultimaQuimio: S.datos.ultimaQuimio || '', dia: diaPost(fecha),
+      s: e.s, fiebre: FIEBRE_TXT[e.fiebre] || '', nota: e.nota || '', alarma: !!alarmOf(e) });
+    fetch(BASE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body })
+      .then(() => { e.guardado = true; }, () => { e.guardado = false; })
+      .then(() => { save(); if (view === 'listo') render(); });
+  }
+  function reintentar() { Object.keys(S.log).filter(d => d >= addDays(today(), -7) && S.log[d].guardado !== true && S.log[d].guardado !== undefined).forEach(guardarEnBase); }
+  const pasosWA = (txt) => `<div class="wa-box"><h2>${txt}</h2>
+    <ol class="pasos"><li><b>1</b><span>Toca el botón verde de abajo.</span></li><li><b>2</b><span>Se abre WhatsApp con tu mensaje ya escrito.</span></li><li><b>3</b><span>Toca la flechita verde <span class="flecha">➤</span> para enviarlo.</span></li></ol>
+    <a class="primary wa" target="_blank" rel="noopener" href="${waLink()}">Enviar por WhatsApp a la Dra. Tania</a></div>`;
+  function estadoBase(e) {
+    if (!BASE_URL || !e) return '';
+    if (e.guardado === true) return `<p class="saved">✓ Tus respuestas ya quedaron guardadas para la Dra. Tania.</p>`;
+    if (e.guardado === false) return `<p class="saved bad">No se pudieron guardar por falta de internet. Mándalas por WhatsApp.</p>`;
+    return `<p class="saved">Guardando tus respuestas…</p>`;
+  }
+
   const V = {
     inicio() {
       const t = today(), done = !!S.log[t];
@@ -245,6 +278,9 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
         return head + `<p class="q">Para terminar</p><p class="qhint">Revisa que estos datos estén bien.</p>
           <label class="l" for="nom">Tu nombre</label><input id="nom" autocomplete="name" value="${esc(S.datos.nombre)}">
           <div style="height:16px"></div>
+          <label class="l" for="cel">Tu celular</label><p class="helper" style="margin:-2px 0 8px">10 dígitos. Así la doctora sabe quién eres.</p>
+          <input id="cel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="33 1234 5678" value="${esc(S.datos.celular)}">
+          <div style="height:16px"></div>
           <label class="l" for="quimio">Fecha de tu última quimioterapia</label><p class="helper" style="margin:-2px 0 8px">El día de tu última aplicación, o de tu última toma si son pastillas.</p>
           <input id="quimio" type="date" max="${today()}" value="${esc(S.datos.ultimaQuimio)}">
           <div style="height:20px"></div><button class="primary" type="button" id="saveName">Terminar</button>`;
@@ -255,21 +291,17 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
     },
     listo() {
       const e = S.log[today()];
-      if (alarmOf(e)) {
-        const tel = DOCTORA_TEL;
-        return `<div class="alarm"><h2>Avísale a tu doctora ahora</h2><p style="margin:0">Lo que anotaste puede ser una señal de alarma.</p>
-          ${tel ? `<div class="phone">${TEL_VISTO}</div>` : ''}
-          <a class="primary wa" style="margin-top:12px" target="_blank" rel="noopener" href="${waLink()}">Mandarle mensaje por WhatsApp</a>
-          <p style="margin:14px 0 0;font-size:1rem">Si no logras comunicarte y te sientes muy mal, ve a urgencias y di que estás en tratamiento contra el cáncer.</p></div>
-          <div style="height:14px"></div><button class="secondary" data-go="inicio" type="button">Ir al inicio</button>`;
-      }
-      return `<div class="ok"><div class="tick">✓</div><h2 style="color:var(--ok);margin:8px 0 4px">Listo, quedó anotado</h2><p style="margin:0">Gracias. Mañana vuelve a contarnos cómo te sientes.</p></div>
-        <div style="height:14px"></div><button class="primary" data-go="inicio" type="button">Ir al inicio</button>`;
+      const nom = S.datos.nombre ? ', ' + esc(S.datos.nombre.split(' ')[0]) : '';
+      const top = alarmOf(e)
+        ? `<div class="alarm"><h2>Avísale a tu doctora ahora</h2><p style="margin:0">Lo que anotaste puede ser una señal de alarma. Mándale tu mensaje y, si puedes, llámale.</p><div class="phone">${TEL_VISTO}</div>
+            <p style="margin:0;font-size:1rem">Si no logras comunicarte y te sientes muy mal, ve a urgencias y di que estás en tratamiento contra el cáncer.</p></div>`
+        : `<div class="ok"><div class="tick">✓</div><h2 style="color:var(--ok);margin:8px 0 4px">¡Gracias${nom}!</h2><p style="margin:0">Ya terminaste tus preguntas de hoy.</p></div>`;
+      return top + estadoBase(e) + pasosWA(BASE_URL ? 'Último paso: mándaselas por WhatsApp' : 'Ahora mándaselas a la doctora') +
+        `<div style="height:14px"></div><button class="secondary" data-go="inicio" type="button">Ir al inicio</button>`;
     },
     enviar() {
-      return back() + `<h2>Mandar a mi doctora</h2><p class="helper" style="margin-top:-6px">Este es el mensaje. Toca el botón verde y luego "Enviar" en WhatsApp.</p>
-        <div class="preview">${esc(summary())}</div><div style="height:14px"></div>
-        <a class="primary wa" target="_blank" rel="noopener" href="${waLink()}">Abrir WhatsApp</a>
+      return back() + pasosWA('Mandar a mi doctora') + `<p class="helper" style="margin:16px 0 6px">Este es el mensaje que le va a llegar:</p>
+        <div class="preview">${esc(summary())}</div>
         ${DOCTORA_TEL ? '' : '<p class="helper">En WhatsApp elige el chat de tu doctora.</p>'}
         <div style="height:10px"></div><button class="secondary" type="button" id="copyRes">Copiar el mensaje</button>
         <textarea id="resOut" hidden readonly style="margin-top:10px"></textarea>`;
@@ -302,9 +334,10 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
     if (d.ans != null) { draft.s[Q[step].k] = +d.ans; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
     if (d.fiebre) { draft.fiebre = d.fiebre; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
     if (b.id === 'finish') { draft.nota = document.getElementById('nota').value.trim(); S.log[today()] = draft; save(); step++; render(); window.scrollTo(0, 0); return; }
-    if (b.id === 'saveName') { S.datos.nombre = document.getElementById('nom').value.trim(); S.datos.ultimaQuimio = document.getElementById('quimio').value; save(); return go('listo'); }
+    if (b.id === 'saveName') { S.datos.nombre = document.getElementById('nom').value.trim(); S.datos.celular = document.getElementById('cel').value.replace(/\D/g, '').slice(-10); S.datos.ultimaQuimio = document.getElementById('quimio').value; save(); guardarEnBase(today()); return go('listo'); }
     if (b.id === 'copyRes') return copy(summary(), 'resOut', 'Mensaje copiado');
   });
+  reintentar();
   render();
 })();
 </script>
