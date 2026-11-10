@@ -215,16 +215,18 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
   const alarmOf = e => e && (isFever(e.fiebre) || ['Náusea', 'Vómito', 'Diarrea', 'Estreñimiento', 'Dolor', 'Boca'].some(k => (e.s || {})[k] === 3));
 
   function summary() {
-    const days = Array.from({ length: 7 }, (_, i) => addDays(today(), -6 + i));
+    // Solo el día de hoy (o el último día que contestó, si hoy no ha contestado).
+    const ult = Object.keys(S.log).filter(d => d <= today() && S.log[d] && S.log[d].s).sort().pop();
+    const days = S.log[today()] ? [today()] : (ult ? [ult] : []);
     const L = ['Hola doctora, soy ' + (S.datos.nombre || 'su paciente') + '.'];
     const uq = S.datos.ultimaQuimio;
     if (uq) { const n = Math.round((new Date(today() + 'T12:00') - new Date(uq + 'T12:00')) / 864e5); L.push('Última quimioterapia: ' + longDate(uq) + (n >= 0 ? ' (hace ' + n + (n === 1 ? ' día)' : ' días)') : '')); }
-    L.push('Así me he sentido:', '');
+    L.push(days[0] === today() || !days.length ? 'Así me siento hoy:' : 'Así me sentí:', '');
     days.forEach(d => { const e = S.log[d]; if (!e) return;
       const parts = Q.filter(x => (e.s[x.k] ?? 0) > 0).map(x => x.k + ': ' + x.o[e.s[x.k]][0].toLowerCase() + ' (G' + e.s[x.k] + ')');
       if (e.fiebre === 'g1') parts.unshift('FIEBRE 38 a 39 °C'); else if (e.fiebre === 'g2') parts.unshift('FIEBRE más de 39 °C'); else if (e.fiebre === 'si') parts.unshift('FIEBRE 38 °C o más');
       L.push('• ' + cap(longDate(d)) + ': ' + (parts.join(', ') || 'bien') + (e.nota ? '. ' + e.nota : '')); });
-    if (!days.some(d => S.log[d])) L.push('Todavía no he anotado nada esta semana.');
+    if (!days.length) L.push('Todavía no he anotado nada.');
     return L.join('\n');
   }
   function waLink() { let t = DOCTORA_TEL.replace(/\D/g, ''); if (t.length === 10) t = '52' + t; return 'https://wa.me/' + t + '?text=' + encodeURIComponent(summary()); }
