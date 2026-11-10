@@ -336,7 +336,10 @@ label.l { display: block; font-weight: 800; font-size: 1rem; margin: 0 0 6px; co
     if (d.ans != null) { draft.s[Q[step].k] = +d.ans; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
     if (d.fiebre) { draft.fiebre = d.fiebre; render(); setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250); return; }
     if (b.id === 'finish') { draft.nota = document.getElementById('nota').value.trim(); S.log[today()] = draft; save(); step++; render(); window.scrollTo(0, 0); return; }
-    if (b.id === 'saveName') { S.datos.nombre = document.getElementById('nom').value.trim(); S.datos.celular = document.getElementById('cel').value.replace(/\D/g, '').slice(-10); S.datos.ultimaQuimio = document.getElementById('quimio').value; save(); guardarEnBase(today()); return go('listo'); }
+    if (b.id === 'saveName') { const nomN = document.getElementById('nom').value.trim(), celN = document.getElementById('cel').value.replace(/\D/g, '').slice(-10);
+      // Si en este celular contesta otra persona, se borran los días anteriores del paciente anterior.
+      if ((S.datos.celular && celN && S.datos.celular !== celN) || (!celN && S.datos.nombre && nomN && S.datos.nombre.toLowerCase() !== nomN.toLowerCase())) { const hoy = S.log[today()]; S.log = hoy ? { [today()]: hoy } : {}; }
+      S.datos.nombre = nomN; S.datos.celular = celN; S.datos.ultimaQuimio = document.getElementById('quimio').value; save(); guardarEnBase(today()); return go('listo'); }
     if (b.id === 'copyRes') return copy(summary(), 'resOut', 'Mensaje copiado');
   });
   reintentar();
